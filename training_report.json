@@ -1,0 +1,24 @@
+{
+  "dataset": "Bandwidth.csv",
+  "rows": 615,
+  "time_bins": 318,
+  "time_start_utc": "2026-03-06T10:56:35.936000+00:00",
+  "time_end_utc": "2026-03-06T11:49:20.269000+00:00",
+  "hosts_observed": [
+    "central.cdn.ip",
+    "central.cdn.local.ip",
+    "central2.cdn.ip",
+    "edge.cdn.local.ip"
+  ],
+  "status_counts": {
+    "200": 565,
+    "0": 29,
+    "400": 21
+  },
+  "lstm_holdout_request_count_mae": 2.274142265319824,
+  "lstm_holdout_request_count_rmse": 2.981083393096924,
+  "lstm_holdout_samples": 64,
+  "lstm_lookback_bins": 12,
+  "gnn_training_mae_log_targets": 0.05670022964477539,
+  "note": "Small trace; GNN is trained on observed hostname aggregates and minute-level co-occurrence. It is not evidence of geographic latency or production CDN performance. LSTM request-count evaluation uses scaled/log-transformed targets as specified in training code; validate metrics before claiming gains."
+}
