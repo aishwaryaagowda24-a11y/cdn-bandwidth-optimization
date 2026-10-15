@@ -15,7 +15,7 @@ except ImportError:
 app = FastAPI(title="Real-data CDN Bandwidth Optimization", version="1.0.0")
 origins = os.getenv("CORS_ORIGINS", "*").split(",")
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
-DATA = ROOT / "data" / "raw" / "Bandwidth.csv"
+DATA = ROOT / "data" / "Bandwidth.csv"
 _df = load_data(DATA)
 _records = _df.to_dict(orient="records")
 for r in _records:
