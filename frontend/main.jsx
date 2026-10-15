@@ -8,7 +8,7 @@ const API = import.meta.env.VITE_API_BASE || '';
 const fmt = (v,d=1)=>Number(v||0).toLocaleString(undefined,{maximumFractionDigits:d});
 function App(){
  const [health,setHealth]=useState(null),[summary,setSummary]=useState(null),[forecast,setForecast]=useState(null),[graph,setGraph]=useState(null),[metrics,setMetrics]=useState([]);
- const [events,setEvents]=useState([]),[connected,setConnected]=useState(false),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState('3'),[hlsUrl,setHlsUrl]=useState('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'),[videoStatus,setVideoStatus]=useState('Paste a browser-accessible HLS URL and press Load stream.'),[latency,setLatency]=useState(null);
+ const [events,setEvents]=useState([]),[connected,setConnected]=useState(false),[playing,setPlaying]=useState(false),[speed,setSpeed]=useState('3'),[hlsUrl,setHlsUrl]=useState('/videos/sample.mp4'),[videoStatus,setVideoStatus]=useState('Paste a browser-accessible HLS URL and press Load stream.'),[latency,setLatency]=useState(null);
  const wsRef=useRef(null),videoRef=useRef(null),hlsRef=useRef(null),lastEvents=useRef([]);
  const refresh=async()=>{try{const [h,s,f,g,m]=await Promise.all(['/api/health','/api/summary','/api/forecast','/api/graph','/api/metrics'].map(p=>fetch(API+p).then(r=>r.json())));setHealth(h);setSummary(s);setForecast(f);setGraph(g);setMetrics(m.measurements||[])}catch(e){setHealth({status:'unreachable',error:String(e)})}};
  useEffect(()=>{refresh();const t=setInterval(refresh,5000);return()=>clearInterval(t)},[]);
