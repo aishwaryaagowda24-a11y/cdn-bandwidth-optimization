@@ -14,7 +14,51 @@ function App(){
  useEffect(()=>{refresh();const t=setInterval(refresh,5000);return()=>clearInterval(t)},[]);
  const connect=()=>{if(wsRef.current){wsRef.current.close();wsRef.current=null;setPlaying(false);return} const proto=location.protocol==='https:'?'wss':'ws';const base=API?new URL(API,location.href):location;const url=`${proto}://${base.host}/ws/live?speed=${speed}`;const ws=new WebSocket(url);wsRef.current=ws;ws.onopen=()=>{setConnected(true);setPlaying(true)};ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='historical_replay'){setEvents(prev=>{const next=[...prev,{time:m.record.startedDateTime,latency:m.record.time_ms||0,bytes:m.record.content_size||0,status:m.record.status||0,host:m.record.hostname||'unknown',asset:m.record.asset_type||'other',index:m.index}].slice(-80);lastEvents.current=next;return next})}};ws.onclose=()=>{setConnected(false);setPlaying(false);wsRef.current=null};ws.onerror=()=>setConnected(false)};
  useEffect(()=>()=>{wsRef.current?.close();hlsRef.current?.destroy()},[]);
- const loadVideo=()=>{const v=videoRef.current;if(!v||!hlsUrl.trim())return;hlsRef.current?.destroy();setVideoStatus('Loading manifest…');if(Hls.isSupported()){const hls=new Hls({enableWorker:true,lowLatencyMode:true});hlsRef.current=hls;const started=performance.now();hls.loadSource(hlsUrl.trim());hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,()=>{setVideoStatus(`Manifest loaded in ${(performance.now()-started).toFixed(1)} ms. Segment timing will be measured by browser playback.`)});hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)setVideoStatus(`HLS error: ${data.details}. Check URL, CORS, and whether the stream is public.`)});}else if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=hlsUrl.trim();setVideoStatus('Native HLS playback selected; actual segment timings depend on browser support.')}else setVideoStatus('This browser does not support HLS playback. Try a Chromium browser.');};
+ 
+const loadVideo = () => {
+  const v = videoRef.current;
+  if (!v || !hlsUrl.trim()) return;
+
+  hlsRef.current?.destroy();
+  hlsRef.current = null;
+
+  const url = hlsUrl.trim();
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
+
+  if (url.toLowerCase().split('?')[0].endsWith('.mp4')) {
+    v.src = url;
+    v.load();
+    setVideoStatus('MP4 loaded. Press Play to start.');
+    return;
+  }
+
+  setVideoStatus('Loading HLS manifest…');
+
+  if (Hls.isSupported()) {
+    const hls = new Hls();
+    hlsRef.current = hls;
+    hls.loadSource(url);
+    hls.attachMedia(v);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      setVideoStatus('HLS manifest loaded. Press Play to start.');
+    });
+
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      if (data.fatal) {
+        setVideoStatus(`HLS error: ${data.details}`);
+      }
+    });
+  } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+    v.src = url;
+    v.load();
+    setVideoStatus('Native HLS playback selected.');
+  } else {
+    setVideoStatus('This browser does not support HLS playback.');
+  }
+};
  const measureLatency=async()=>{const t=performance.now();try{const r=await fetch(API+'/api/health',{cache:'no-store'});await r.json();setLatency({ms:(performance.now()-t).toFixed(2),kind:'browser-to-deployed-API round trip',at:new Date().toLocaleTimeString()})}catch(e){setLatency({ms:'—',kind:'Request failed: '+String(e)})}};
  const chart=useMemo(()=>events.slice(-40).map((e,i)=>({i:i+1,latency:Number(e.latency)||0,KB:(Number(e.bytes)||0)/1024,requests:1})),[events]);
  const hostBars=useMemo(()=>Object.entries(events.reduce((a,e)=>(a[e.host]=(a[e.host]||0)+1,a),{})).map(([hostname,requests])=>({hostname,requests})),[events]);
