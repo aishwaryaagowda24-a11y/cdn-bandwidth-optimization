@@ -27,12 +27,24 @@ const loadVideo = () => {
   v.removeAttribute('src');
   v.load();
 
-  if (url.toLowerCase().split('?')[0].endsWith('.mp4')) {
-    v.src = url;
-    v.load();
-    setVideoStatus('MP4 loaded. Press Play to start.');
-    return;
-  }
+  
+if (url.toLowerCase().split('?')[0].endsWith('.mp4')) {
+  v.src = new URL(url, window.location.href).href;
+  v.load();
+
+  v.onloadeddata = () => {
+    setVideoStatus('Video ready. Press Play to start.');
+  };
+
+  v.onerror = () => {
+    setVideoStatus(
+      `Video failed to load (error ${v.error?.code ?? 'unknown'}). Check the video URL and format.`
+    );
+  };
+
+  setVideoStatus('Loading MP4 video…');
+  return;
+}
 
   setVideoStatus('Loading HLS manifest…');
 
