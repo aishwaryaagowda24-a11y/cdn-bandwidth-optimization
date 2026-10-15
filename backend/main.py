@@ -84,6 +84,16 @@ async def live(ws:WebSocket):
     except Exception: pass
 
 @app.middleware("http")
+async def add_video_cache_headers(request, call_next):
+    response = await call_next(request)
+
+    if request.url.path == "/videos/sample.mp4":
+        response.headers["Cache-Control"] = "public, max-age=3600"
+
+    return response
+
+
+@app.middleware("http")
 async def measure_http(request, call_next):
     start=time.perf_counter()
     response=await call_next(request)
